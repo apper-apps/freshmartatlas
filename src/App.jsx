@@ -35,41 +35,65 @@ import { persistor, store } from "@/store/index";
 import { addRealTimeNotification, setConnectionStatus, updateApprovalStatus } from "@/store/approvalWorkflowSlice";
 
 // Enhanced lazy component creation with proper error handling
-// Enhanced lazy component creation with proper error handling
 const createLazyComponent = (importFn, componentName) => {
   let retryCount = 0;
   const maxRetries = 3;
   
   const loadWithRetry = async () => {
-try {
+    try {
       const module = await importFn();
       
-      // First check for default export (most common case)
-      if (module?.default) {
-        const defaultExport = module.default;
-        // Ensure it's a valid React component (function or class)
-        if (typeof defaultExport === 'function' || (typeof defaultExport === 'object' && defaultExport.prototype && defaultExport.prototype.render)) {
-          return { default: defaultExport };
+      // Enhanced validation for React components
+      const isValidReactComponent = (component) => {
+        if (typeof component === 'function') {
+          // Check if it's a React function component or class component
+          return true;
         }
+        if (typeof component === 'object' && component !== null) {
+          // Check if it's a React class component
+          return typeof component.render === 'function' || 
+                 (component.prototype && typeof component.prototype.render === 'function');
+        }
+        return false;
+      };
+      
+      // First check for default export (most common case)
+      if (module?.default && isValidReactComponent(module.default)) {
+        return { default: module.default };
       }
       
       // If no valid default export, look for named export matching componentName
       if (module && typeof module === 'object' && module[componentName]) {
         const namedExport = module[componentName];
-        if (typeof namedExport === 'function' || (typeof namedExport === 'object' && namedExport.prototype && namedExport.prototype.render)) {
+        if (isValidReactComponent(namedExport)) {
           return { default: namedExport };
         }
       }
       
-      // Last resort: look for any function export
+      // Last resort: look for any valid React component export
       if (module && typeof module === 'object') {
-        const functionExport = Object.values(module).find(exp => typeof exp === 'function');
-        if (functionExport) {
-          return { default: functionExport };
+        const validExports = Object.entries(module)
+          .filter(([key, value]) => key !== 'default' && isValidReactComponent(value))
+          .map(([key, value]) => ({ key, value }));
+        
+        if (validExports.length > 0) {
+          console.warn(`Using ${validExports[0].key} as default export for ${componentName}`);
+          return { default: validExports[0].value };
         }
       }
       
-      throw new Error(`Valid React component ${componentName} not found in module`);
+      // If we still haven't found a valid component, provide detailed error info
+      const moduleKeys = module && typeof module === 'object' ? Object.keys(module) : [];
+      const errorDetails = {
+        componentName,
+        moduleKeys,
+        hasDefault: !!module?.default,
+        defaultType: typeof module?.default,
+        moduleType: typeof module
+      };
+      
+      console.error('Module loading failed. Debug info:', errorDetails);
+      throw new Error(`Valid React component "${componentName}" not found in module. Available exports: ${moduleKeys.join(', ')}`);
     } catch (error) {
       console.error(`Failed to load ${componentName} (attempt ${retryCount + 1}):`, error);
       
@@ -82,7 +106,8 @@ try {
       if (retryCount < maxRetries && 
           (error?.message?.includes('Loading chunk') || 
            error?.message?.includes('fetch') ||
-           error?.message?.includes('network'))) {
+           error?.message?.includes('network') ||
+           error?.message?.includes('TypeError'))) {
         retryCount++;
         console.log(`Retrying ${componentName} load (${retryCount}/${maxRetries})...`);
         await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));

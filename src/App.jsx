@@ -43,17 +43,33 @@ const createLazyComponent = (importFn, componentName) => {
   const loadWithRetry = async () => {
 try {
       const module = await importFn();
-      // Handle both named and default exports with proper React component validation
-      if (module?.default && typeof module.default === 'function') {
-        return { default: module.default };
-      } else if (module && typeof module === 'object' && Object.keys(module).length > 0) {
-        // If no default export, try to find the component by name or first export
-        const exportedComponent = module[componentName] || Object.values(module).find(exp => typeof exp === 'function');
-        if (exportedComponent && typeof exportedComponent === 'function') {
-          return { default: exportedComponent };
+      
+      // First check for default export (most common case)
+      if (module?.default) {
+        const defaultExport = module.default;
+        // Ensure it's a valid React component (function or class)
+        if (typeof defaultExport === 'function' || (typeof defaultExport === 'object' && defaultExport.prototype && defaultExport.prototype.render)) {
+          return { default: defaultExport };
         }
       }
-      throw new Error(`Component ${componentName} not found in module`);
+      
+      // If no valid default export, look for named export matching componentName
+      if (module && typeof module === 'object' && module[componentName]) {
+        const namedExport = module[componentName];
+        if (typeof namedExport === 'function' || (typeof namedExport === 'object' && namedExport.prototype && namedExport.prototype.render)) {
+          return { default: namedExport };
+        }
+      }
+      
+      // Last resort: look for any function export
+      if (module && typeof module === 'object') {
+        const functionExport = Object.values(module).find(exp => typeof exp === 'function');
+        if (functionExport) {
+          return { default: functionExport };
+        }
+      }
+      
+      throw new Error(`Valid React component ${componentName} not found in module`);
     } catch (error) {
       console.error(`Failed to load ${componentName} (attempt ${retryCount + 1}):`, error);
       

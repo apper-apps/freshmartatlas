@@ -2,7 +2,7 @@ import tailwindcss from '@tailwindcss/postcss'
 
 export default {
   plugins: {
-    tailwindcss: tailwindcss,
+    '@tailwindcss/postcss': tailwindcss,
     autoprefixer: {},
   },
 }

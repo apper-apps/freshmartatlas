@@ -1,12 +1,12 @@
 import '@/index.css'
-import React, { useCallback, useEffect, useState } from 'react'
-import ReactDOM from 'react-dom/client'
-import { Provider } from 'react-redux'
-import { ToastContainer, toast } from 'react-toastify'
-import App from '@/App'
-import ErrorComponent from '@/components/ui/Error'
-import { classifyError } from '@/utils/errorHandling'
-import { store } from '@/store/index'
+import React, { useCallback, useEffect, useState } from "react";
+import ReactDOM from "react-dom/client";
+import { Provider } from "react-redux";
+import { ToastContainer, toast } from "react-toastify";
+import App from "@/App";
+import ErrorComponent from "@/components/ui/Error";
+import { classifyError } from "@/utils/errorHandling";
+import { store } from "@/store/index";
 // Polyfill for structuredClone if not available
 if (typeof structuredClone === 'undefined') {
   window.structuredClone = function(obj) {
@@ -814,7 +814,44 @@ getErrorSummary() {
   }
 };
 
-// Missing function for SDK initialization
+// Enhanced SDK message handler function
+function handleSDKMessage(event) {
+  try {
+    // Validate message origin for security
+    if (!event.origin || (!event.origin.includes('apper.io') && !event.origin.includes('integrately.com'))) {
+      return;
+    }
+    
+    // Process the message data safely
+    const sanitizedData = serializeForPostMessage(event.data);
+    console.log('SDK Message received:', sanitizedData);
+    
+    // Dispatch custom event for app components to listen to
+    window.dispatchEvent(new window.CustomEvent('sdk-message', {
+      detail: {
+        origin: event.origin,
+        data: sanitizedData,
+        timestamp: Date.now()
+      }
+    }));
+    
+    // Handle specific SDK message types
+    if (sanitizedData && typeof sanitizedData === 'object') {
+      if (sanitizedData.type === 'initialization') {
+        console.log('SDK initialization message received');
+      } else if (sanitizedData.type === 'error') {
+        console.error('SDK error message:', sanitizedData.error);
+        performanceMonitor.trackError(new Error(sanitizedData.error), 'sdk-message-error');
+      }
+    }
+    
+  } catch (error) {
+    console.warn('Error handling SDK message:', error);
+    performanceMonitor.trackError(error, 'sdk-message-handler-error');
+  }
+}
+
+// SDK initialization function
 async function initializeSDK() {
   try {
     // Setup message handler
@@ -831,24 +868,6 @@ async function initializeSDK() {
     performanceMonitor.trackError(error, 'sdk-init-error');
   }
 }
-// Missing function for SDK message handling
-
-// Missing function for SDK message handling
-const handleSDKMessage = (event) => {
-  try {
-    if (event.origin && event.origin.includes('apper.io')) {
-      const sanitizedData = serializeForPostMessage(event.data);
-      console.log('Handled SDK message:', sanitizedData);
-      
-      // Dispatch sanitized message
-      window.dispatchEvent(new window.CustomEvent('apper-sdk-message', {
-        detail: sanitizedData
-      }));
-    }
-  } catch (error) {
-    console.warn('SDK message handling failed:', error);
-  }
-};
 
 performanceMonitor.mark('app-start');
 

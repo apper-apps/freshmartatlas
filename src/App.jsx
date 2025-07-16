@@ -163,11 +163,6 @@ class LazyErrorBoundary extends React.Component {
 }
 // Lazy load heavy components for better performance with error handling
 const AdminDashboard = createLazyComponent(() => import('@/components/pages/AdminDashboard'), 'AdminDashboard');
-const Analytics = createLazyComponent(() => import('@/components/pages/Analytics'), 'Analytics');
-const FinancialDashboard = createLazyComponent(() => import('@/components/pages/FinancialDashboard'), 'FinancialDashboard');
-const DeliveryDashboard = createLazyComponent(() => import('@/components/pages/DeliveryDashboard'), 'DeliveryDashboard');
-const EmployeeManagement = createLazyComponent(() => import('@/components/pages/EmployeeManagement'), 'EmployeeManagement');
-const AttendanceTracking = createLazyComponent(() => import('@/components/pages/AttendanceTracking'), 'AttendanceTracking');
 const PayrollCalculation = createLazyComponent(() => import('@/components/pages/PayrollCalculation'), 'PayrollCalculation');
 // WebSocket Integration Component
 const WebSocketProvider = ({ children }) => {

@@ -4,7 +4,7 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
-theme: {
+  theme: {
     extend: {
       colors: {
         primary: '#2E7D32',

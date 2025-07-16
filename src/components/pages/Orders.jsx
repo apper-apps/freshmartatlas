@@ -373,8 +373,8 @@ className="flex items-center space-x-2 text-primary hover:text-primary-dark tran
                                   };
                                   document.body.appendChild(modal);
                                 }}
-                              />
-<div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 flex items-center justify-center rounded-lg transition-all">
+/>
+                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 flex items-center justify-center rounded-lg transition-all">
                                 <ApperIcon name="Eye" size={14} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                               </div>
                             </div>
@@ -386,7 +386,7 @@ className="flex items-center space-x-2 text-primary hover:text-primary-dark tran
                 )}
               </div>
               
-{/* Order Items Preview */}
+              {/* Order Items Preview */}
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <h4 className="text-sm font-medium text-gray-900 mb-3">Items ({order?.items?.length || 0})</h4>
                 <div className="space-y-2">

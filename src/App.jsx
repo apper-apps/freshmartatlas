@@ -23,7 +23,6 @@ import DeliveryDashboard from "@/components/pages/DeliveryDashboard";
 import PaymentManagement from "@/components/pages/PaymentManagement";
 import DeliveryTracking from "@/components/pages/DeliveryTracking";
 import EmployeeManagement from "@/components/pages/EmployeeManagement";
-import PayrollCalculation from "@/components/pages/PayrollCalculation";
 import VendorManagement from "@/components/pages/VendorManagement";
 import AttendanceTracking from "@/components/pages/AttendanceTracking";
 import FinancialDashboard from "@/components/pages/FinancialDashboard";

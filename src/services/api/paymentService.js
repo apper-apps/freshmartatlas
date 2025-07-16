@@ -369,7 +369,9 @@ generateTransactionId() {
     const maxId = this.transactions.reduce((max, transaction) => 
       transaction.Id > max ? transaction.Id : max, 0);
     return maxId + 1;
-  }
+}
+
+  // Wallet Management Methods
 // Wallet Management Methods
   async getWalletBalance() {
     await this.delay(200);
@@ -1564,46 +1566,50 @@ generateFileUrl(fileName) {
 
       return { success: true, payment };
 
-    } catch (error) {
+} catch (error) {
       // Handle payment failure
-      recurring.totalPayments++;
-      recurring.failedPayments++;
-      recurring.lastPaymentDate = new Date().toISOString();
-      recurring.lastPaymentStatus = 'failed';
-      
-      // Mark scheduled payment as failed
-      scheduledPayment.status = 'failed';
-      scheduledPayment.failedAt = new Date().toISOString();
-      scheduledPayment.failureReason = error.message;
-      scheduledPayment.retryCount = (scheduledPayment.retryCount || 0) + 1;
+      const recurring = this.recurringPayments.find(r => r.Id === scheduledPayment.recurringPaymentId);
+      if (recurring) {
+        recurring.totalPayments++;
+        recurring.failedPayments++;
+        recurring.lastPaymentDate = new Date().toISOString();
+        recurring.lastPaymentStatus = 'failed';
+        
+        // Mark scheduled payment as failed
+        scheduledPayment.status = 'failed';
+        scheduledPayment.failedAt = new Date().toISOString();
+        scheduledPayment.failureReason = error.message;
+        scheduledPayment.retryCount = (scheduledPayment.retryCount || 0) + 1;
 
-      // Handle retry logic
-      if (recurring.autoRetry && scheduledPayment.retryCount < recurring.maxRetries) {
-        // Schedule retry
-        const retryDate = new Date();
-        retryDate.setHours(retryDate.getHours() + recurring.retryInterval);
-        
-        const retryPayment = {
-          Id: this.scheduledPaymentIdCounter++,
-          recurringPaymentId: recurring.Id,
-          scheduledDate: retryDate.toISOString(),
-          amount: recurring.amount,
-          status: 'pending',
-          isRetry: true,
-          originalScheduledPaymentId: scheduledPayment.Id,
-          retryCount: scheduledPayment.retryCount,
-          createdAt: new Date().toISOString()
-        };
-        
-        this.scheduledPayments.push(retryPayment);
-      } else {
-        // Max retries reached or auto-retry disabled
-        if (scheduledPayment.retryCount >= recurring.maxRetries) {
-          recurring.status = 'failed';
-          recurring.failedAt = new Date().toISOString();
-          recurring.failureReason = `Max retries (${recurring.maxRetries}) exceeded`;
+        // Handle retry logic
+        if (recurring.autoRetry && scheduledPayment.retryCount < recurring.maxRetries) {
+          // Schedule retry
+          const retryDate = new Date();
+          retryDate.setHours(retryDate.getHours() + recurring.retryInterval);
+          
+          const retryPayment = {
+            Id: this.scheduledPaymentIdCounter++,
+            recurringPaymentId: recurring.Id,
+            scheduledDate: retryDate.toISOString(),
+            amount: recurring.amount,
+            status: 'pending',
+            isRetry: true,
+            originalScheduledPaymentId: scheduledPayment.Id,
+            retryCount: scheduledPayment.retryCount,
+            createdAt: new Date().toISOString()
+          };
+          
+          this.scheduledPayments.push(retryPayment);
+        } else {
+          // Max retries reached or auto-retry disabled
+          if (scheduledPayment.retryCount >= recurring.maxRetries) {
+            recurring.status = 'failed';
+            recurring.failedAt = new Date().toISOString();
+            recurring.failureReason = `Max retries (${recurring.maxRetries}) exceeded`;
+          }
         }
       }
+}
 
       return { success: false, error: error.message };
     }

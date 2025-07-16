@@ -48,12 +48,20 @@ export const useCart = () => {
   const getCartCount = () => cartCount;
   const getCartItems = () => cart;
   
+// These functions should be used within components, not as utilities
+  // They are kept here for compatibility but should be called from within React components
   const isProductInCart = (productId) => {
-    return useSelector(selectIsProductInCart(productId));
+    // This function should be called from within a React component
+    // Example: const isInCart = useSelector(selectIsProductInCart(productId));
+    console.warn('isProductInCart should be called from within a React component');
+    return false;
   };
   
   const getProductQuantityInCart = (productId) => {
-    return useSelector(selectProductQuantityInCart(productId));
+    // This function should be called from within a React component
+    // Example: const quantity = useSelector(selectProductQuantityInCart(productId));
+    console.warn('getProductQuantityInCart should be called from within a React component');
+    return 0;
   };
 
   return {

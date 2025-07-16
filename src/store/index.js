@@ -28,10 +28,10 @@ export const store = configureStore({
           'persist/REHYDRATE',
           'approvalWorkflow/setConnectionStatus',
           'approvalWorkflow/addRealTimeNotification'
-]
-}
+        ]
+      }
     }),
-  devTools: typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production'
+  devTools: typeof window !== 'undefined' && window.process?.env?.NODE_ENV !== 'production'
 });
 
 export const persistor = persistStore(store);

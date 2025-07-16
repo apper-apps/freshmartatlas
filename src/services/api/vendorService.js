@@ -449,7 +449,7 @@ async createVendor(vendorData) {
   }
 
   isValidPhone(phone) {
-    const phoneRegex = /^[\+]?[\d\s\-\(\)]{10,}$/;
+const phoneRegex = /^[+]?[\d\s\-()]{10,}$/;
     return phoneRegex.test(phone);
 }
 

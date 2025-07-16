@@ -59,18 +59,17 @@ async getById(id) {
         order.items = [];
       }
       
-      // Validate essential order properties
-      if (!order.hasOwnProperty('status')) {
+// Validate essential order properties
+      if (!Object.hasOwnProperty.call(order, 'status')) {
         console.warn(`OrderService.getById: Order ${numericId} missing status, setting default`);
         order.status = 'pending';
       }
       
-      if (!order.hasOwnProperty('total') || order.total <= 0) {
+      if (!Object.hasOwnProperty.call(order, 'total') || order.total <= 0) {
         console.warn(`OrderService.getById: Order ${numericId} has invalid total, calculating from items`);
         order.total = order.items.reduce((sum, item) => 
           sum + ((item.price || 0) * (item.quantity || 0)), 0) + (order.deliveryCharge || 0);
       }
-      
       // Ensure critical timestamps exist
       if (!order.createdAt) {
         console.warn(`OrderService.getById: Order ${numericId} missing createdAt, using current time`);

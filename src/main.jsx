@@ -4,9 +4,9 @@ import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
 import { ToastContainer, toast } from "react-toastify";
 import App from "@/App";
+import ErrorComponent from "@/components/ui/Error";
 import { classifyError } from "@/utils/errorHandling";
 import { store } from "@/store/index";
-import ErrorComponent from "@/components/ui/Error";
 
 // Polyfill for structuredClone if not available
 if (typeof structuredClone === 'undefined') {
@@ -178,6 +178,7 @@ if (event.data && typeof event.data === 'object') {
 
 // Enhanced data serialization utility to prevent DataCloneError
 // Enhanced serialization with performance optimizations
+// Enhanced serialization with performance optimizations
 const serializeForPostMessage = (data) => {
   // Performance cache for frequently serialized objects
   const serializationCache = new Map();
@@ -196,7 +197,6 @@ const serializeForPostMessage = (data) => {
     if (serializationCache.has(cacheKey)) {
       return serializationCache.get(cacheKey);
     }
-    
     // Track circular references with WeakSet for better performance
     const seen = new WeakSet();
     const path = [];

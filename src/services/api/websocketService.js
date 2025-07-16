@@ -422,10 +422,10 @@ console.error('Max reconnection attempts reached, giving up');
       if (typeof error === 'object') {
         const serialized = {};
         for (const key in error) {
-          try {
+try {
             const value = error[key];
             
-// Skip functions and non-serializable objects
+            // Skip functions and non-serializable objects
             if (typeof value === 'function') continue;
             
             // Skip DOM nodes
@@ -436,14 +436,13 @@ console.error('Max reconnection attempts reached, giving up');
             serialized[key] = value;
           } catch (serializationError) {
             // If serialization fails, convert to string
-            serialized[key] = String(value);
+            serialized[key] = String(error[key]);
           }
         }
         
         serialized.timestamp = new Date().toISOString();
         return serialized;
       }
-      
       // For non-objects, return as string
       return String(error);
     } catch (error) {
@@ -496,7 +495,7 @@ console.error('Max reconnection attempts reached, giving up');
       
       // Handle plain objects
       const serialized = {};
-      for (const key in message) {
+for (const key in message) {
         if (message.hasOwnProperty(key)) {
           try {
             const value = message[key];

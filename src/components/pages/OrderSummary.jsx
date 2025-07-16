@@ -183,7 +183,7 @@ const loadOrderSummary = async () => {
         throw new Error(`Invalid order data type received: ${typeof orderData}`);
       }
 
-      if (!orderData.hasOwnProperty('id') || orderData.id !== numericOrderId) {
+if (!Object.hasOwnProperty.call(orderData, 'id') || orderData.id !== numericOrderId) {
         throw new Error(`Order ID mismatch: expected ${numericOrderId}, received ${orderData.id}`);
       }
 

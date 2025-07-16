@@ -2,16 +2,15 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
-import { formatCurrency } from "@/utils/currency";
 import ApperIcon from "@/components/ApperIcon";
-import { Badge } from "@/components/atoms/Badge";
 import Empty from "@/components/ui/Empty";
 import Error from "@/components/ui/Error";
 import Loading from "@/components/ui/Loading";
 import OrderStatusBadge from "@/components/molecules/OrderStatusBadge";
+import { Badge } from "@/components/atoms/Badge";
 import { clipboardService } from "@/services/ClipboardService";
 import { orderService } from "@/services/api/orderService";
-
+import { formatCurrency } from "@/utils/currency";
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -164,7 +163,7 @@ className="flex items-center space-x-2 text-primary hover:text-primary-dark tran
 </div>
                   )}
                 </div>
-                <>
+<React.Fragment>
                   {(order.paymentMethod === 'jazzcash' || order.paymentMethod === 'easypaisa' || order.paymentMethod === 'bank') && (
                     <div className="flex items-center space-x-1">
                       {order.verificationStatus === 'verified' && (
@@ -205,7 +204,7 @@ className="flex items-center space-x-2 text-primary hover:text-primary-dark tran
                       {order?.items?.length || 0} items
                     </p>
                   </div>
-                </>
+                </React.Fragment>
               </div>
             </div>
 

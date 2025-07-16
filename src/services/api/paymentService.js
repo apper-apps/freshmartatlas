@@ -1,3 +1,5 @@
+import React from "react";
+import Error from "@/components/ui/Error";
 // Payment Service - Pure JavaScript implementation
 // Handles all payment processing operations
 class PaymentService {
@@ -1609,7 +1611,6 @@ generateFileUrl(fileName) {
           }
         }
       }
-}
 
       return { success: false, error: error.message };
     }

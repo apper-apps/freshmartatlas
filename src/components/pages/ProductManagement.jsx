@@ -1698,10 +1698,9 @@ return matchesSearch && matchesCategory;
 
 // Enhanced Bulk Actions Modal with Category Discounts and Validation
 const EnhancedBulkActionsModal = ({ products, categories, onUpdate, onClose }) => {
-  const [activeTab, setActiveTab] = useState('pricing'); // pricing, discounts, validation
+const [activeTab, setActiveTab] = useState('pricing'); // pricing, discounts, validation
   const [updateData, setUpdateData] = useState({
-value: '',
-    minPrice: '',
+    value: '',
     minPrice: '',
     maxPrice: '',
     category: 'all',

@@ -1,3 +1,5 @@
+import React from "react";
+import Error from "@/components/ui/Error";
 class WebSocketService {
   constructor() {
     this.connection = null;
@@ -496,8 +498,8 @@ try {
       // Handle plain objects
       const serialized = {};
 for (const key in message) {
-        if (message.hasOwnProperty(key)) {
-          try {
+      if (Object.prototype.hasOwnProperty.call(message, key)) {
+        try {
             const value = message[key];
             
             // Skip functions
@@ -511,9 +513,8 @@ for (const key in message) {
               serialized[key] = `[${value.constructor.name}]`;
               continue;
             }
-            
-            // Skip Window objects
-            if (typeof Window !== 'undefined' && value instanceof Window) {
+// Skip Window objects
+            if (typeof window !== 'undefined' && typeof Window !== 'undefined' && value instanceof Window) {
               serialized[key] = `[${value.constructor.name}]`;
               continue;
             }

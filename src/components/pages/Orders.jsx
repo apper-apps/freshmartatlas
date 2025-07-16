@@ -158,54 +158,84 @@ className="flex items-center space-x-2 text-primary hover:text-primary-dark tran
                         <Badge variant="danger" className="text-xs">
                           <ApperIcon name="XCircle" size={12} className="mr-1" />
                           Rejected
-                        </Badge>
-                      )}
-</div>
-                  )}
-                </div>
-<React.Fragment>
-                  {(order.paymentMethod === 'jazzcash' || order.paymentMethod === 'easypaisa' || order.paymentMethod === 'bank') && (
-                    <div className="flex items-center space-x-1">
-                      {order.verificationStatus === 'verified' && (
-                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full flex items-center">
-                          <ApperIcon name="CheckCircle" size={12} className="mr-1" />
-                          Payment Verified
-                        </span>
-                      )}
-                      {order.verificationStatus === 'rejected' && (
-                        <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full flex items-center">
-                          <ApperIcon name="XCircle" size={12} className="mr-1" />
-                          Payment Rejected
-                        </span>
-                      )}
-                      {order.verificationStatus === 'pending' && (
-                        <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full flex items-center">
-                          <ApperIcon name="Clock" size={12} className="mr-1" />
-                          Pending Verification
-                        </span>
+</Badge>
                       )}
                     </div>
                   )}
-                  <div className="text-right sm:text-left sm:mt-2">
-                    <p className="text-lg sm:text-xl font-bold gradient-text">
-                      {(() => {
-                        // Calculate subtotal if order total is missing or zero
-                        if (!order?.total || order.total === 0) {
-                          const itemsSubtotal = order?.items?.reduce((sum, item) => {
-                            return sum + ((item.price || 0) * (item.quantity || 0));
-                          }, 0) || 0;
-                          const deliveryCharge = order?.deliveryCharge || 0;
-                          return formatCurrency(itemsSubtotal + deliveryCharge);
-                        }
-                        return formatCurrency(order.total);
-                      })()}
-                    </p>
-                    <p className="text-xs sm:text-sm text-gray-600">
-                      {order?.items?.length || 0} items
-                    </p>
+                </div>
+                
+                {/* Mobile-responsive status and total */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <OrderStatusBadge status={order.status} />
+                    {/* Approval Status Badge */}
+                    {order.approvalStatus && (
+                      <div className="flex items-center space-x-1">
+                        {order.approvalStatus === 'approved' && (
+                          <Badge variant="success" className="text-xs">
+                            <ApperIcon name="CheckCircle" size={12} className="mr-1" />
+                            Approved
+                          </Badge>
+                        )}
+                        {order.approvalStatus === 'pending' && (
+                          <Badge variant="warning" className="text-xs animate-pulse">
+                            <ApperIcon name="Clock" size={12} className="mr-1" />
+                            Pending Approval
+                          </Badge>
+                        )}
+                        {order.approvalStatus === 'rejected' && (
+                          <Badge variant="danger" className="text-xs">
+                            <ApperIcon name="XCircle" size={12} className="mr-1" />
+                            Rejected
+                          </Badge>
+                        )}
+                      </div>
+                    )}
                   </div>
-                </React.Fragment>
-              </div>
+                  
+                  <React.Fragment>
+                    {(order.paymentMethod === 'jazzcash' || order.paymentMethod === 'easypaisa' || order.paymentMethod === 'bank') && (
+                      <div className="flex items-center space-x-1">
+                        {order.verificationStatus === 'verified' && (
+                          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full flex items-center">
+                            <ApperIcon name="CheckCircle" size={12} className="mr-1" />
+                            Payment Verified
+                          </span>
+                        )}
+                        {order.verificationStatus === 'rejected' && (
+                          <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full flex items-center">
+                            <ApperIcon name="XCircle" size={12} className="mr-1" />
+                            Payment Rejected
+                          </span>
+                        )}
+                        {order.verificationStatus === 'pending' && (
+                          <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full flex items-center">
+                            <ApperIcon name="Clock" size={12} className="mr-1" />
+                            Pending Verification
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    <div className="text-right sm:text-left sm:mt-2">
+                      <p className="text-lg sm:text-xl font-bold gradient-text">
+                        {(() => {
+                          // Calculate subtotal if order total is missing or zero
+                          if (!order?.total || order.total === 0) {
+                            const itemsSubtotal = order?.items?.reduce((sum, item) => {
+                              return sum + ((item.price || 0) * (item.quantity || 0));
+                            }, 0) || 0;
+                            const deliveryCharge = order?.deliveryCharge || 0;
+                            return formatCurrency(itemsSubtotal + deliveryCharge);
+                          }
+                          return formatCurrency(order.total);
+                        })()}
+                      </p>
+                      <p className="text-xs sm:text-sm text-gray-600">
+                        {order?.items?.length || 0} items
+                      </p>
+                    </div>
+                  </React.Fragment>
+                </div>
             </div>
 
             {/* Mini Status Timeline for Mobile */}

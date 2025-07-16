@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
@@ -22,7 +22,7 @@ import { store } from "@/store/index";
 import { addRealTimeNotification, approveRequest, fetchPendingApprovals, rejectRequest, selectApprovalLoading, selectPendingApprovals, selectRealTimeUpdates, setConnectionStatus, updateApprovalStatus } from "@/store/approvalWorkflowSlice";
 
 const AdminDashboard = () => {
-  const dispatch = useDispatch();
+const dispatch = useDispatch();
   const navigate = useNavigate();
   const notificationCounts = useSelector(state => state.notifications.counts);
   const pendingApprovals = useSelector(selectPendingApprovals);
@@ -2377,5 +2377,3 @@ action.isAction ? (
 </div>
   );
 };
-
-export default AdminDashboard;

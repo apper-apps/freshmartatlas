@@ -1013,7 +1013,6 @@ const mockUnsplashImages = Array.from({ length: loadMore ? 12 : 6 }, (_, index) 
       'snacks': ['crunchy', 'satisfying', 'portable', 'tasty', 'convenient', 'wholesome', 'guilt-free'],
       
       // Legacy support
-      'Fresh Vegetables': ['organic', 'healthy', 'green', 'fresh', 'natural'],
 'Fresh Vegetables': ['organic', 'healthy', 'green', 'fresh', 'natural'],
       'Tropical Fruits': ['colorful', 'exotic', 'sweet', 'vitamin', 'tropical'],
       'Dairy Products': ['creamy', 'calcium', 'protein', 'fresh', 'natural'],

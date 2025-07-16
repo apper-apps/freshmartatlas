@@ -145,10 +145,9 @@ function sanitizeMessageForPostMessage(obj) {
   if (Array.isArray(obj)) {
     return obj.map(sanitizeMessageForPostMessage);
   }
-  
-  const sanitized = {};
+const sanitized = {};
   for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
+    if (Object.hasOwn(obj, key)) {
       sanitized[key] = sanitizeMessageForPostMessage(obj[key]);
     }
   }

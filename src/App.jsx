@@ -34,7 +34,7 @@ import webSocketService from "@/services/api/websocketService";
 import { persistor, store } from "@/store/index";
 import { addRealTimeNotification, setConnectionStatus, updateApprovalStatus } from "@/store/approvalWorkflowSlice";
 
-// Enhanced lazy component creation with proper error handling
+// Simplified lazy component creation with proper error handling
 const createLazyComponent = (importFn, componentName) => {
   let retryCount = 0;
   const maxRetries = 3;
@@ -43,61 +43,28 @@ const createLazyComponent = (importFn, componentName) => {
     try {
       const module = await importFn();
       
-      // Enhanced validation for React components
-      const isValidReactComponent = (component) => {
-        if (typeof component === 'function') {
-          // Check if it's a React function component or class component
-          return true;
-        }
-        if (typeof component === 'object' && component !== null) {
-          // Check if it's a React class component
-          return typeof component.render === 'function' || 
-                 (component.prototype && typeof component.prototype.render === 'function');
-        }
-        return false;
+      // Simple validation for React components
+      const isValidComponent = (component) => {
+        return typeof component === 'function' || 
+               (typeof component === 'object' && component !== null);
       };
       
-      // First check for default export (most common case)
-      if (module?.default && isValidReactComponent(module.default)) {
+      // Check for default export first (most common case)
+      if (module?.default && isValidComponent(module.default)) {
         return { default: module.default };
       }
       
-      // If no valid default export, look for named export matching componentName
-      if (module && typeof module === 'object' && module[componentName]) {
-        const namedExport = module[componentName];
-        if (isValidReactComponent(namedExport)) {
-          return { default: namedExport };
-        }
+      // Check for named export matching componentName
+      if (module && module[componentName] && isValidComponent(module[componentName])) {
+        return { default: module[componentName] };
       }
       
-      // Last resort: look for any valid React component export
-      if (module && typeof module === 'object') {
-        const validExports = Object.entries(module)
-          .filter(([key, value]) => key !== 'default' && isValidReactComponent(value))
-          .map(([key, value]) => ({ key, value }));
-        
-        if (validExports.length > 0) {
-          console.warn(`Using ${validExports[0].key} as default export for ${componentName}`);
-          return { default: validExports[0].value };
-        }
-      }
-      
-      // If we still haven't found a valid component, provide detailed error info
-      const moduleKeys = module && typeof module === 'object' ? Object.keys(module) : [];
-      const errorDetails = {
-        componentName,
-        moduleKeys,
-        hasDefault: !!module?.default,
-        defaultType: typeof module?.default,
-        moduleType: typeof module
-      };
-      
-      console.error('Module loading failed. Debug info:', errorDetails);
-      throw new Error(`Valid React component "${componentName}" not found in module. Available exports: ${moduleKeys.join(', ')}`);
+      // If no valid component found, throw a simple error
+      throw new Error(`Component "${componentName}" not found in module`);
     } catch (error) {
-      console.error(`Failed to load ${componentName} (attempt ${retryCount + 1}):`, error);
+      console.error(`Failed to load ${componentName} (attempt ${retryCount + 1}):`, error.message);
       
-      // Enhanced error tracking
+      // Track error without circular references
       if (typeof window !== 'undefined' && window.performanceMonitor) {
         window.performanceMonitor.trackError(error, `lazy-load-${componentName}`);
       }
@@ -120,7 +87,7 @@ const createLazyComponent = (importFn, componentName) => {
 
   return React.lazy(loadWithRetry);
 };
-// Enhanced error boundary for lazy components
+// Simplified error boundary for lazy components
 class LazyErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -132,10 +99,8 @@ class LazyErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('Lazy component error:', error, errorInfo);
-    // Log additional debugging info
+    console.error('Lazy component error:', error.message);
     console.error('Component name:', this.props.componentName);
-    console.error('Error info:', errorInfo);
   }
 
   render() {
@@ -184,14 +149,6 @@ class LazyErrorBoundary extends React.Component {
               >
                 Go Back
               </button>
-              {import.meta.env.DEV && (
-                <button
-                  onClick={() => console.log('Full error object:', error)}
-                  className="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200 text-sm"
-                >
-                  Log Error to Console
-                </button>
-              )}
             </div>
           </div>
         </div>

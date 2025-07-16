@@ -2377,3 +2377,5 @@ action.isAction ? (
 </div>
   );
 };
+
+export default AdminDashboard;

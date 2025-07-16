@@ -41,14 +41,14 @@ const createLazyComponent = (importFn, componentName) => {
   const maxRetries = 3;
   
   const loadWithRetry = async () => {
-    try {
+try {
       const module = await importFn();
-      // Handle both named and default exports
-      if (module?.default) {
+      // Handle both named and default exports with proper React component validation
+      if (module?.default && typeof module.default === 'function') {
         return { default: module.default };
       } else if (module && typeof module === 'object' && Object.keys(module).length > 0) {
-        // If no default export, try to find the component by name
-        const exportedComponent = module[componentName] || Object.values(module)[0];
+        // If no default export, try to find the component by name or first export
+        const exportedComponent = module[componentName] || Object.values(module).find(exp => typeof exp === 'function');
         if (exportedComponent && typeof exportedComponent === 'function') {
           return { default: exportedComponent };
         }

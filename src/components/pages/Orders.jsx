@@ -374,10 +374,10 @@ className="flex items-center space-x-2 text-primary hover:text-primary-dark tran
                                   document.body.appendChild(modal);
                                 }}
                               />
-                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 flex items-center justify-center rounded-lg transition-all">
+<div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 flex items-center justify-center rounded-lg transition-all">
                                 <ApperIcon name="Eye" size={14} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                               </div>
-</div>
+                            </div>
                           </div>
                         </div>
                       </div>

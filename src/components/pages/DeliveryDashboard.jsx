@@ -5,11 +5,11 @@ import Button from "@/components/atoms/Button";
 import Error from "@/components/ui/Error";
 import Loading from "@/components/ui/Loading";
 // Removed incorrect import - this component is DeliveryDashboard
+// Removed incorrect import - this component is DeliveryDashboard
 import Orders from "@/components/pages/Orders";
 import { orderService } from "@/services/api/orderService";
 import { deliveryPersonnelService } from "@/services/api/deliveryPersonnelService";
-import { clipboardService } from "@/services/clipboardService";
-
+import { clipboardService } from "@/services/ClipboardService";
 const DeliveryDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [personnel, setPersonnel] = useState([]);

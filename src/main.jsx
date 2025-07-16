@@ -114,44 +114,46 @@ window.addEventListener('unhandledrejection', (event) => {
   }
 });
 
-// Enhanced postMessage interception with better error recovery
+// PostMessage error wrapper for external integrations
 const originalPostMessage = window.postMessage;
-const postMessageState = {
-  attempts: new Map(),
-  maxRetries: 3,
-  retryDelay: 100
-};
-
 window.postMessage = function(message, targetOrigin, transfer) {
-  const attemptKey = `${targetOrigin}:${Date.now()}`;
-try {
-    // Test if message can be cloned
-    window.structuredClone(message);
-    return originalPostMessage.call(this, message, targetOrigin, transfer);
+  try {
+    // Convert URL objects to strings to prevent DataCloneError
+    const sanitizedMessage = sanitizeMessageForPostMessage(message);
+    return originalPostMessage.call(this, sanitizedMessage, targetOrigin, transfer);
   } catch (error) {
-    if (error.name === 'DataCloneError') {
-      console.warn('PostMessage DataCloneError prevented, sanitizing message');
-      
-      try {
-        const sanitizedMessage = serializeForPostMessage(message);
-        return originalPostMessage.call(this, sanitizedMessage, targetOrigin, transfer);
-      } catch (sanitizeError) {
-        console.error('Failed to sanitize message:', sanitizeError);
-        
-        // Fallback to minimal safe message
-        const fallbackMessage = {
-          __type: 'PostMessageFallback',
-          timestamp: Date.now(),
-          originalError: error.message,
-          targetOrigin
-        };
-        
-        return originalPostMessage.call(this, fallbackMessage, targetOrigin, transfer);
-      }
+    console.warn('PostMessage error prevented:', error);
+    // Attempt to send string representation if original fails
+    try {
+      const stringMessage = typeof message === 'object' ? JSON.stringify(message) : String(message);
+      return originalPostMessage.call(this, stringMessage, targetOrigin, transfer);
+    } catch (fallbackError) {
+      console.error('PostMessage fallback also failed:', fallbackError);
     }
-    throw error;
   }
 };
+
+function sanitizeMessageForPostMessage(obj) {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+  
+  if (obj instanceof URL) {
+    return obj.toString();
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(sanitizeMessageForPostMessage);
+  }
+  
+  const sanitized = {};
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      sanitized[key] = sanitizeMessageForPostMessage(obj[key]);
+    }
+  }
+  return sanitized;
+}
 
 // Handle postMessage errors specifically with enhanced safety
 window.addEventListener('message', (event) => {

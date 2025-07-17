@@ -7,9 +7,8 @@ import Empty from "@/components/ui/Empty";
 import Error from "@/components/ui/Error";
 import Loading from "@/components/ui/Loading";
 import OrderStatusBadge from "@/components/molecules/OrderStatusBadge";
-import { ClipboardService } from "@/services/ClipboardService";
+import ClipboardService from "@/services/ClipboardService";
 import { orderService } from "@/services/api/orderService";
-import { formatCurrency } from "@/utils/currency";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);

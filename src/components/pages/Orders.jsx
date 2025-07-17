@@ -380,8 +380,8 @@ document.body.appendChild(modal);
                           </div>
                         </div>
                       </div>
-                    </div>
 </div>
+                  </div>
                 )}
               </div>
               

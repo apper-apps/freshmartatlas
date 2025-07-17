@@ -227,15 +227,15 @@ const Orders = () => {
                       delivered: 'Home'
                     };
                     const statusLabels = {
-                      pending: 'Placed',
+pending: 'Placed',
                       confirmed: 'Confirmed',
                       packed: 'Packed',
                       shipped: 'Shipped',
                       delivered: 'Delivered'
                     };
-const currentIndex = ['pending', 'confirmed', 'packed', 'shipped', 'delivered'].findIndex(s => s === order.status?.toLowerCase());
-                     const isCompleted = index <= currentIndex;
-                     const isActive = index === currentIndex;
+                    const currentIndex = ['pending', 'confirmed', 'packed', 'shipped', 'delivered'].findIndex(s => s === order.status?.toLowerCase());
+                    const isCompleted = index <= currentIndex;
+                    const isActive = index === currentIndex;
                     return (
                       <div key={status} className="flex flex-col items-center min-w-[80px]">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 ${

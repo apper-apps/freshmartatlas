@@ -89,9 +89,9 @@ const Orders = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>
-        <Link 
+<Link 
           to="/category/All"
-className="flex items-center space-x-2 text-primary hover:text-primary-dark transition-colors"
+          className="flex items-center space-x-2 text-primary hover:text-primary-dark transition-colors"
         >
           <ApperIcon name="Plus" size={20} />
           <span>Shop More</span>
@@ -233,11 +233,10 @@ className="flex items-center space-x-2 text-primary hover:text-primary-dark tran
                       shipped: 'Shipped',
                       delivered: 'Delivered'
                     };
-                    const currentIndex = ['pending', 'confirmed', 'packed', 'shipped', 'delivered'].findIndex(s => s === order.status?.toLowerCase());
-                    const isCompleted = index <= currentIndex;
-                    const isActive = index === currentIndex;
-                    
-return (
+const currentIndex = ['pending', 'confirmed', 'packed', 'shipped', 'delivered'].findIndex(s => s === order.status?.toLowerCase());
+                     const isCompleted = index <= currentIndex;
+                     const isActive = index === currentIndex;
+                    return (
                       <div key={status} className="flex flex-col items-center min-w-[80px]">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 ${
                           isCompleted ? 'bg-gradient-to-r from-primary to-accent text-white' : 'bg-gray-200 text-gray-400'
@@ -252,7 +251,6 @@ return (
                         )}
                       </div>
                     );
-                  })}
                 </div>
               </div>
             </div>
@@ -372,8 +370,8 @@ return (
                                     }
                                   };
                                   document.body.appendChild(modal);
-                                }}
-/>
+}}
+                              />
                               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 flex items-center justify-center rounded-lg transition-all">
                                 <ApperIcon name="Eye" size={14} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                               </div>
@@ -463,9 +461,9 @@ return (
                   <span>View Details</span>
                 </Link>
                 
-                <button className="flex items-center space-x-1 sm:space-x-2 text-blue-600 hover:text-blue-700 transition-colors text-sm bg-blue-50 px-3 py-1.5 rounded-lg">
+<button className="flex items-center space-x-1 sm:space-x-2 text-blue-600 hover:text-blue-700 transition-colors text-sm bg-blue-50 px-3 py-1.5 rounded-lg">
                   <ApperIcon name="MessageCircle" size={14} />
-<span>Chat Support</span>
+                  <span>Chat Support</span>
                 </button>
                 {order.status === 'delivered' && (
                   <button className="flex items-center space-x-1 sm:space-x-2 text-green-600 hover:text-green-700 transition-colors text-sm bg-green-50 px-3 py-1.5 rounded-lg">
@@ -507,8 +505,8 @@ return (
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-purple-700">Amount:</span>
-<span className="font-semibold text-purple-900">
+<span className="text-purple-700">Amount:</span>
+                      <span className="font-semibold text-purple-900">
                         {formatCurrency(order.walletTransaction.amount)}
                       </span>
                     </div>

@@ -237,7 +237,7 @@ className="flex items-center space-x-2 text-primary hover:text-primary-dark tran
                     const isCompleted = index <= currentIndex;
                     const isActive = index === currentIndex;
                     
-                    return (
+return (
                       <div key={status} className="flex flex-col items-center min-w-[80px]">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 ${
                           isCompleted ? 'bg-gradient-to-r from-primary to-accent text-white' : 'bg-gray-200 text-gray-400'
@@ -252,7 +252,7 @@ className="flex items-center space-x-2 text-primary hover:text-primary-dark tran
                         )}
                       </div>
                     );
-})}
+                  })}
                 </div>
               </div>
             </div>

@@ -218,14 +218,14 @@ const Orders = () => {
               </div>
               <div className="horizontal-timeline-container overflow-x-auto">
                 <div className="horizontal-timeline-track flex space-x-4 pb-2">
-                  {['pending', 'confirmed', 'packed', 'shipped', 'delivered'].map((status, index) => {
+{['pending', 'confirmed', 'packed', 'shipped', 'delivered'].map((status, index) => {
                     const statusIcons = {
                       pending: 'ShoppingCart',
                       confirmed: 'CheckCircle',
                       packed: 'Package',
                       shipped: 'Truck',
                       delivered: 'Home'
-};
+                    };
                     const statusLabels = {
                       pending: 'Placed',
                       confirmed: 'Confirmed',
@@ -250,7 +250,8 @@ const Orders = () => {
                           <div className="w-2 h-2 bg-primary rounded-full mt-1 animate-pulse"></div>
                         )}
                       </div>
-                    );
+);
+                  })}
                 </div>
               </div>
             </div>
@@ -369,8 +370,8 @@ const Orders = () => {
                                       document.body.removeChild(modal);
                                     }
                                   };
-                                  document.body.appendChild(modal);
-}}
+document.body.appendChild(modal);
+                                }}
                               />
                               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 flex items-center justify-center rounded-lg transition-all">
                                 <ApperIcon name="Eye" size={14} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -380,7 +381,7 @@ const Orders = () => {
                         </div>
                       </div>
                     </div>
-                  </div>
+</div>
                 )}
               </div>
               
@@ -460,7 +461,6 @@ const Orders = () => {
                   <ApperIcon name="Eye" size={14} />
                   <span>View Details</span>
                 </Link>
-                
 <button className="flex items-center space-x-1 sm:space-x-2 text-blue-600 hover:text-blue-700 transition-colors text-sm bg-blue-50 px-3 py-1.5 rounded-lg">
                   <ApperIcon name="MessageCircle" size={14} />
                   <span>Chat Support</span>
@@ -504,8 +504,8 @@ const Orders = () => {
                         {order.walletTransaction.type.replace('_', ' ')}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-<span className="text-purple-700">Amount:</span>
+<div className="flex justify-between">
+                      <span className="text-purple-700">Amount:</span>
                       <span className="font-semibold text-purple-900">
                         {formatCurrency(order.walletTransaction.amount)}
                       </span>

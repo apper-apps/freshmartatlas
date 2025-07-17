@@ -225,9 +225,9 @@ const Orders = () => {
                       packed: 'Package',
                       shipped: 'Truck',
                       delivered: 'Home'
-                    };
+};
                     const statusLabels = {
-pending: 'Placed',
+                      pending: 'Placed',
                       confirmed: 'Confirmed',
                       packed: 'Packed',
                       shipped: 'Shipped',

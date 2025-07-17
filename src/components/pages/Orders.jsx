@@ -7,10 +7,10 @@ import Empty from "@/components/ui/Empty";
 import Error from "@/components/ui/Error";
 import Loading from "@/components/ui/Loading";
 import OrderStatusBadge from "@/components/molecules/OrderStatusBadge";
-import Badge, { Badge } from "@/components/atoms/Badge";
-import clipboardService, { clipboardService } from "@/services/ClipboardService";
+import Badge from "@/components/atoms/Badge";
+import clipboardService from "@/services/ClipboardService";
 import { orderService } from "@/services/api/orderService";
-import formatCurrency, { formatCurrency } from "@/utils/currency";
+import formatCurrency from "@/utils/currency";
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);

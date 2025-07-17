@@ -7,10 +7,10 @@ import Empty from "@/components/ui/Empty";
 import Error from "@/components/ui/Error";
 import Loading from "@/components/ui/Loading";
 import OrderStatusBadge from "@/components/molecules/OrderStatusBadge";
-import Badge from "@/components/atoms/Badge";
-import clipboardService from "@/services/ClipboardService";
+import Badge, { Badge } from "@/components/atoms/Badge";
+import clipboardService, { clipboardService } from "@/services/ClipboardService";
 import { orderService } from "@/services/api/orderService";
-import formatCurrency from "@/utils/currency";
+import formatCurrency, { formatCurrency } from "@/utils/currency";
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -85,11 +85,11 @@ const Orders = () => {
     );
   }
 
-  return (
+return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>
-<Link 
+        <Link 
           to="/category/All"
           className="flex items-center space-x-2 text-primary hover:text-primary-dark transition-colors"
         >

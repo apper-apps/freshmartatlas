@@ -118,13 +118,13 @@ class LazyErrorBoundary extends React.Component {
                 </span>
               )}
             </p>
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-left">
+<div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-left">
               <p className="text-sm text-red-700 font-medium mb-1">Error Details:</p>
               <p className="text-xs text-red-600 break-all">{error?.message || 'Unknown error'}</p>
-<div className="flex gap-4 justify-center">
+            </div>
+            <div className="flex gap-4 justify-center">
               <button
                 onClick={() => {
-                  this.setState({ hasError: false, error: null, retryCount: this.state.retryCount + 1 });
                 }}
                 className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90"
               >

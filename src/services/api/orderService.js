@@ -1,8 +1,6 @@
-import ordersData from "../mockData/orders.json";
-import React from "react";
-import Error from "@/components/ui/Error";
-import { productService } from "@/services/api/productService";
-import { paymentService } from "@/services/api/paymentService";
+import ordersData from '../mockData/orders.json';
+import { productService } from '@/services/api/productService';
+import { paymentService } from '@/services/api/paymentService';
 
 class OrderService {
   constructor() {

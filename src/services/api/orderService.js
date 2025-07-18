@@ -105,15 +105,25 @@ async create(orderData) {
     await this.delay();
     
     // Enhanced payment data validation with proper wallet payment handling
-    if (orderData.paymentMethod && orderData.paymentMethod !== 'cash') {
-      // Wallet payments are handled differently and don't require pre-existing paymentResult
-      if (orderData.paymentMethod !== 'wallet' && !orderData.paymentResult) {
+if (orderData.paymentMethod && orderData.paymentMethod !== 'cash') {
+      // Enhanced validation for non-cash payments
+      if (!orderData.paymentResult && orderData.paymentMethod !== 'wallet') {
         const error = new Error('Payment result is required for non-cash payments');
         error.code = 'PAYMENT_RESULT_MISSING';
+        error.paymentMethod = orderData.paymentMethod;
         throw error;
       }
       
-      // Validate payment result structure for digital wallets (excluding wallet payments)
+      // For wallet payments, validate either paymentResult or walletTransaction
+      if (orderData.paymentMethod === 'wallet') {
+        if (!orderData.paymentResult && !orderData.walletTransaction) {
+          const error = new Error('Payment result or wallet transaction is required for wallet payments');
+          error.code = 'WALLET_PAYMENT_RESULT_MISSING';
+          throw error;
+        }
+      }
+      
+      // Validate payment result structure for digital wallets
       if (['jazzcash', 'easypaisa'].includes(orderData.paymentMethod) && orderData.paymentResult) {
         if (!orderData.paymentResult.transactionId) {
           const error = new Error('Transaction ID is missing from payment result');

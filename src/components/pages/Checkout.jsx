@@ -346,7 +346,7 @@ async function completeOrder(paymentResult) {
       const validatedTotal = finalSubtotal + validatedDeliveryCharge + gatewayFee;
 
       // Create order data
-      const orderData = {
+const orderData = {
         items: validatedItems,
         customerInfo: {
           name: formData.name,
@@ -361,6 +361,15 @@ async function completeOrder(paymentResult) {
           dataUrl: paymentProofData
         } : null,
         transactionId: transactionId || paymentResult?.transactionId || null,
+        // Add paymentResult field for non-cash payments
+        paymentResult: paymentMethod !== 'cash' && paymentResult ? {
+          transactionId: paymentResult.transactionId,
+          reference: paymentResult.reference,
+          timestamp: paymentResult.timestamp,
+          success: paymentResult.success,
+          paymentMethod: paymentMethod,
+          amount: validatedTotal
+        } : null,
         deliveryAddress: {
           name: formData.name,
           phone: formData.phone,

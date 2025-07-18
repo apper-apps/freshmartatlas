@@ -1,5 +1,3 @@
-import React from "react";
-import Error from "@/components/ui/Error";
 // Payment Service - Pure JavaScript implementation
 // Handles all payment processing operations
 class PaymentService {

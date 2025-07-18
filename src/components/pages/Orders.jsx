@@ -42,12 +42,12 @@ const Orders = () => {
     fetchOrders();
   }, []);
 
-  const fetchOrders = async () => {
+const fetchOrders = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await orderService.getAllOrders();
-      setOrders(response.data || []);
+      const response = await orderService.getAll();
+      setOrders(response || []);
     } catch (err) {
       console.error('Error fetching orders:', err);
       setError(err.message || 'Failed to fetch orders');

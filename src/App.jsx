@@ -11,6 +11,7 @@ import ProductManagement from "@/components/pages/ProductManagement";
 import Analytics from "@/components/pages/Analytics";
 import Category from "@/components/pages/Category";
 import Account from "@/components/pages/Account";
+import AdminDashboard from "@/components/pages/AdminDashboard";
 import ProductDetail from "@/components/pages/ProductDetail";
 import Orders from "@/components/pages/Orders";
 import VendorPortal from "@/components/pages/VendorPortal";
@@ -23,6 +24,7 @@ import DeliveryDashboard from "@/components/pages/DeliveryDashboard";
 import PaymentManagement from "@/components/pages/PaymentManagement";
 import DeliveryTracking from "@/components/pages/DeliveryTracking";
 import EmployeeManagement from "@/components/pages/EmployeeManagement";
+import PayrollCalculation from "@/components/pages/PayrollCalculation";
 import VendorManagement from "@/components/pages/VendorManagement";
 import AttendanceTracking from "@/components/pages/AttendanceTracking";
 import FinancialDashboard from "@/components/pages/FinancialDashboard";
@@ -34,54 +36,51 @@ import webSocketService from "@/services/api/websocketService";
 import { persistor, store } from "@/store/index";
 import { addRealTimeNotification, setConnectionStatus, updateApprovalStatus } from "@/store/approvalWorkflowSlice";
 
-// Simplified lazy component creation with proper error handling
-const createLazyComponent = (importFn, componentName) => {
-  let retryCount = 0;
-  const maxRetries = 3;
-  
+// Lazy component creation helper
+const createLazyComponent = (importFunc, componentName) => {
   const loadWithRetry = async () => {
-    try {
-      const module = await importFn();
-      
-      // Simple validation for React components
-      const isValidComponent = (component) => {
-        return typeof component === 'function' || 
-               (typeof component === 'object' && component !== null);
-      };
-      
-      // Check for default export first (most common case)
-      if (module?.default && isValidComponent(module.default)) {
-        return { default: module.default };
-      }
-      
-      // Check for named export matching componentName
-      if (module && module[componentName] && isValidComponent(module[componentName])) {
-        return { default: module[componentName] };
-      }
-      
-      // If no valid component found, throw a simple error
-      throw new Error(`Component "${componentName}" not found in module`);
-    } catch (error) {
-      console.error(`Failed to load ${componentName} (attempt ${retryCount + 1}):`, error.message);
-      
-      // Track error without circular references
-      if (typeof window !== 'undefined' && window.performanceMonitor) {
-        window.performanceMonitor.trackError(error, `lazy-load-${componentName}`);
-      }
-      
-      // Retry logic for network-related errors
-      if (retryCount < maxRetries && 
-          (error?.message?.includes('Loading chunk') || 
-           error?.message?.includes('fetch') ||
-           error?.message?.includes('network') ||
-           error?.message?.includes('TypeError'))) {
+    let retryCount = 0;
+    const maxRetries = 2;
+    
+    while (retryCount <= maxRetries) {
+      try {
+        const module = await importFunc();
+        
+        // Simple validation for React components
+        const isValidComponent = (component) => {
+          return typeof component === 'function' || 
+                 (typeof component === 'object' && component !== null);
+        };
+        
+        // Check for default export first (most common case)
+        if (module?.default && isValidComponent(module.default)) {
+          return { default: module.default };
+        }
+        
+        // Check for named export matching componentName
+        if (module && module[componentName] && isValidComponent(module[componentName])) {
+          return { default: module[componentName] };
+        }
+        
+        // If no valid component found, throw a simple error
+        throw new Error(`Component "${componentName}" not found in module`);
+      } catch (error) {
+        console.error(`Failed to load ${componentName} (attempt ${retryCount + 1}):`, error.message);
+        
+        // Track error without circular references
+        if (typeof window !== 'undefined' && window.performanceMonitor) {
+          window.performanceMonitor.trackError(error, `lazy-load-${componentName}`);
+        }
+        
         retryCount++;
-        console.log(`Retrying ${componentName} load (${retryCount}/${maxRetries})...`);
+        
+        if (retryCount > maxRetries) {
+          throw error;
+        }
+        
+        // Wait before retry
         await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-        return loadWithRetry();
       }
-      
-      throw error;
     }
   };
 
@@ -122,13 +121,7 @@ class LazyErrorBoundary extends React.Component {
             <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-left">
               <p className="text-sm text-red-700 font-medium mb-1">Error Details:</p>
               <p className="text-xs text-red-600 break-all">{error?.message || 'Unknown error'}</p>
-              {retryCount > 0 && (
-                <p className="text-xs text-orange-600 mt-1">
-                  Failed after {retryCount} retry attempts
-                </p>
-              )}
-            </div>
-            <div className="flex flex-col space-y-2">
+<div className="flex gap-4 justify-center">
               <button
                 onClick={() => {
                   this.setState({ hasError: false, error: null, retryCount: this.state.retryCount + 1 });
@@ -158,9 +151,10 @@ class LazyErrorBoundary extends React.Component {
     return this.props.children;
   }
 }
+
 // Lazy load heavy components for better performance with error handling
-const AdminDashboard = createLazyComponent(() => import('@/components/pages/AdminDashboard'), 'AdminDashboard');
-const PayrollCalculation = createLazyComponent(() => import('@/components/pages/PayrollCalculation'), 'PayrollCalculation');
+const LazyAdminDashboard = createLazyComponent(() => import('@/components/pages/AdminDashboard'), 'AdminDashboard');
+const LazyPayrollCalculation = createLazyComponent(() => import('@/components/pages/PayrollCalculation'), 'PayrollCalculation');
 // WebSocket Integration Component
 const WebSocketProvider = ({ children }) => {
   const dispatch = useDispatch();
@@ -416,10 +410,10 @@ function App() {
                     } />
                     
                     {/* Heavy admin routes - lazy loaded with error boundaries */}
-                    <Route path="admin" element={
+<Route path="admin" element={
                       <LazyErrorBoundary componentName="AdminDashboard">
                         <Suspense fallback={<Loading type="page" />}>
-                          <AdminDashboard />
+                          <LazyAdminDashboard />
                         </Suspense>
                       </LazyErrorBoundary>
                     } />
@@ -428,8 +422,8 @@ function App() {
                         <Suspense fallback={<Loading type="page" />}>
                           <ProductManagement />
                         </Suspense>
-                      </LazyErrorBoundary>
-} />
+</LazyErrorBoundary>
+                    } />
                     <Route path="admin/vendors" element={
                       <LazyErrorBoundary componentName="VendorManagement">
                         <Suspense fallback={<Loading type="page" />}>
@@ -500,10 +494,10 @@ function App() {
                         </Suspense>
                       </LazyErrorBoundary>
                     } />
-                    <Route path="admin/payroll-calculation" element={
+<Route path="admin/payroll-calculation" element={
                       <LazyErrorBoundary componentName="PayrollCalculation">
                         <Suspense fallback={<Loading type="page" />}>
-                          <PayrollCalculation />
+                          <LazyPayrollCalculation />
                         </Suspense>
                       </LazyErrorBoundary>
                     } />
@@ -525,8 +519,8 @@ function App() {
                         </Suspense>
                       </LazyErrorBoundary>
                     } />
-                  </Route>
-</Routes>
+</Route>
+                </Routes>
               </Suspense>
               <ToastContainer
                 position="top-right"
@@ -543,7 +537,7 @@ function App() {
                 limit={3}
               />
             </div>
-</BrowserRouter>
+          </BrowserRouter>
         </WebSocketProvider>
       </PersistGate>
     </Provider>

@@ -1,9 +1,17 @@
-import ordersData from '../mockData/orders.json'
-import { productService } from '@/services/api/productService'
-import { paymentService } from '@/services/api/paymentService'
+import ordersData from "../mockData/orders.json";
+import React from "react";
+import Error from "@/components/ui/Error";
+import { productService } from "@/services/api/productService";
+import { paymentService } from "@/services/api/paymentService";
+
 class OrderService {
   constructor() {
-    this.orders = [...ordersData];
+    try {
+      this.orders = [...ordersData];
+    } catch (error) {
+      console.error('OrderService constructor error:', error);
+      this.orders = [];
+    }
   }
 
   async getAll() {
@@ -137,10 +145,11 @@ const newOrder = {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    
-    // Handle wallet payments
-if (orderData.paymentMethod === 'wallet') {
+    if (orderData.paymentMethod === 'wallet') {
       try {
+        if (!paymentService || typeof paymentService.processWalletPayment !== 'function') {
+          throw new Error('Payment service not properly initialized');
+        }
         const walletTransaction = await paymentService.processWalletPayment(orderData.total, newOrder.id);
         newOrder.paymentResult = walletTransaction;
         newOrder.paymentStatus = 'completed';
@@ -266,12 +275,15 @@ async updateDeliveryStatus(orderId, deliveryStatus, actualDelivery = null) {
       
       if (!order.paymentResult || !order.paymentResult.transactionId) {
         throw new Error('Order missing payment transaction information');
+}
+    
+    try {
+      if (!paymentService || typeof paymentService.verifyPayment !== 'function') {
+        throw new Error('Payment service not properly initialized for verification');
       }
-      
-      try {
-        const verificationResult = await paymentService.verifyPayment(
-          order.paymentResult.transactionId, 
-          verificationData
+      const verificationResult = await paymentService.verifyPayment(
+        order.paymentResult.transactionId, 
+        verificationData
         );
         
         if (verificationResult.verified) {
@@ -796,8 +808,8 @@ async getPendingAvailabilityRequests() {
       order.order_status_timestamps[stageToStatusMap[stage]] = new Date().toISOString();
     }
     
-    // Vendor confirmation check for payment flow completion
-    if (stage === 'admin_paid' && order.amountMatched) {
+// Vendor confirmation check for payment flow completion
+    if (stage === 'handed_over') {
       order.vendorConfirmed = true;
       order.paymentFlowStage = 'vendor_confirmed';
       order.vendorConfirmationTimestamp = new Date().toISOString();
@@ -900,7 +912,7 @@ async getPendingAvailabilityRequests() {
     
     this.orders[orderIndex] = order;
     return { ...order };
-}
+  }
 
   // Enhanced Price Summary Data Retrieval with Role-Based Filtering
   async getPriceSummaryData(orderId, options = {}) {
@@ -1073,4 +1085,28 @@ async getPendingAvailabilityRequests() {
     return 'Other Items';
   }
 }
-export const orderService = new OrderService();
+
+// Safe singleton pattern with error handling
+let orderServiceInstance = null;
+
+const createOrderService = () => {
+  try {
+    if (!orderServiceInstance) {
+      orderServiceInstance = new OrderService();
+    }
+    return orderServiceInstance;
+  } catch (error) {
+    console.error('Failed to create OrderService instance:', error);
+    // Return a minimal fallback service
+    return {
+      getAll: async () => [],
+      create: async () => { throw new Error('OrderService unavailable'); },
+      update: async () => { throw new Error('OrderService unavailable'); },
+      delete: async () => { throw new Error('OrderService unavailable'); },
+      // Add other essential methods as needed
+    };
+  }
+};
+
+export const orderService = createOrderService();
+export { OrderService };

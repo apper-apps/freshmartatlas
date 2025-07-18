@@ -1,41 +1,46 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { CreditCard, Mail, MapPin, Phone, User } from 'lucide-react'
-  import { useCart } from '@/hooks/useCart'
-  import { toast } from 'react-toastify'
-  import { formatCurrency } from '@/utils/currency'
-  import { clearCart } from '@/store/cartSlice'
+import { CreditCard, Mail, MapPin, Phone, User } from "lucide-react";
+import { useCart } from "@/hooks/useCart";
+import { toast } from "react-toastify";
 import ApperIcon from "@/components/ApperIcon";
-import { Button } from "@/components/atoms/Button";
-import { Input } from "@/components/atoms/Input";
 import Error from "@/components/ui/Error";
 import Loading from "@/components/ui/Loading";
 import Account from "@/components/pages/Account";
 import PaymentMethod from "@/components/molecules/PaymentMethod";
-import { orderService } from "@/services/api/orderService";
+import Input from "@/components/atoms/Input";
+import Button from "@/components/atoms/Button";
 import { productService } from "@/services/api/productService";
+import { orderService } from "@/services/api/orderService";
 import { paymentService } from "@/services/api/paymentService";
+import formatCurrency from "@/utils/currency";
+import { clearCart } from "@/store/cartSlice";
 
 function Checkout() {
   const navigate = useNavigate();
-  const { cart, clearCart: clearCartHook } = useCart();
+  const dispatch = useDispatch();
+  const { items, total, clearCart: clearCartItems } = useCart();
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('cash');
-  const [availablePaymentMethods, setAvailablePaymentMethods] = useState([]);
-  const [gatewayConfig, setGatewayConfig] = useState({});
+  const [serviceError, setServiceError] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
-    email: '',
     address: '',
+    email: '',
     city: '',
     postalCode: '',
     instructions: ''
   });
   const [paymentProof, setPaymentProof] = useState(null);
   const [transactionId, setTransactionId] = useState('');
-const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState({});
+  const [availablePaymentMethods, setAvailablePaymentMethods] = useState([]);
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [gatewayConfig, setGatewayConfig] = useState({});
+  
+  // Use items from useCart hook as cart
+  const cart = items || [];
 
   // Calculate totals with validated pricing and deals
   const calculateCartTotals = () => {
@@ -74,12 +79,25 @@ const [errors, setErrors] = useState({});
     };
   };
 
+  function calculateGatewayFee(currentSubtotal = 0) {
+    const selectedMethod = availablePaymentMethods.find(method => method?.id === paymentMethod);
+    if (!selectedMethod || !selectedMethod.fee) return 0;
+    
+    const feeAmount = typeof selectedMethod.fee === 'number' 
+      ? selectedMethod.fee * currentSubtotal 
+      : selectedMethod.fee;
+    
+    return Math.max(feeAmount, selectedMethod.minimumFee || 0);
+  }
+
   const totals = calculateCartTotals();
-  const { originalSubtotal, dealSavings, subtotal, deliveryCharge, total } = totals;
+  const { originalSubtotal, dealSavings, subtotal, deliveryCharge, total: finalTotal } = totals;
   const gatewayFee = calculateGatewayFee(subtotal);
-useEffect(() => {
+
+  useEffect(() => {
     loadPaymentMethods();
   }, []);
+
   async function loadPaymentMethods() {
     try {
       const methods = await paymentService.getAvailablePaymentMethods();
@@ -95,18 +113,7 @@ useEffect(() => {
     } catch (error) {
       console.error('Failed to load payment methods:', error);
       toast.error('Failed to load payment options');
-}
-  }
-
-  function calculateGatewayFee(currentSubtotal = 0) {
-    const selectedMethod = availablePaymentMethods.find(method => method?.id === paymentMethod);
-    if (!selectedMethod || !selectedMethod.fee) return 0;
-    
-    const feeAmount = typeof selectedMethod.fee === 'number' 
-      ? selectedMethod.fee * currentSubtotal 
-      : selectedMethod.fee;
-    
-    return Math.max(feeAmount, selectedMethod.minimumFee || 0);
+    }
   }
 
   function handleInputChange(e) {
@@ -121,7 +128,7 @@ useEffect(() => {
         ...prev,
         [name]: ''
       }));
-}
+    }
   }
 
   function handleFileUpload(e) {
@@ -230,7 +237,7 @@ return Object.keys(newErrors).length === 0;
 });
   }
 
-  async function completeOrder(paymentResult) {
+async function completeOrder(paymentResult) {
     try {
       let paymentProofData = null;
       
@@ -251,24 +258,14 @@ return Object.keys(newErrors).length === 0;
       for (const item of cart) {
         try {
           const currentProduct = await productService.getById(item.id);
-          
-          if (!currentProduct.isActive) {
-            toast.error(`${item.name} is no longer available`);
-            hasValidationErrors = true;
-            continue;
+          if (!currentProduct) {
+            throw new Error(`Product ${item.name} is no longer available`);
           }
           
-          if (currentProduct.stock < item.quantity) {
-            toast.error(`${item.name} has insufficient stock. Available: ${currentProduct.stock}`);
-            hasValidationErrors = true;
-            continue;
-          }
-          
-          // Use current validated price
           validatedItems.push({
             id: item.id,
             name: item.name,
-            price: currentProduct.price, // Use validated current price
+            price: currentProduct.price,
             quantity: item.quantity,
             image: item.image,
             validatedAt: new Date().toISOString()
@@ -312,17 +309,15 @@ return Object.keys(newErrors).length === 0;
       const validatedDeliveryCharge = finalSubtotal >= 2000 ? 0 : 150;
       const validatedTotal = finalSubtotal + validatedDeliveryCharge + gatewayFee;
 
+      // Create order data
       const orderData = {
         items: validatedItems,
-        originalSubtotal: validatedSubtotal,
-        dealSavings: validatedDealSavings,
-        subtotal: finalSubtotal,
-        deliveryCharge: validatedDeliveryCharge,
-        gatewayFee,
-        total: validatedTotal,
-        paymentMethod,
-        paymentResult,
-        paymentStatus: paymentMethod === 'cash' ? 'pending' : 'pending_verification',
+        customerInfo: {
+          name: formData.name,
+          phone: formData.phone,
+          email: formData.email
+        },
+        paymentMethod: paymentMethod,
         paymentProof: paymentProofData ? {
           fileName: paymentProof?.name || null,
           fileSize: paymentProof?.size || 0,
@@ -350,15 +345,46 @@ return Object.keys(newErrors).length === 0;
         } : null
       };
 
-const order = await orderService.create(orderData);
-      clearCartHook();
+      // Validate orderService availability
+      if (!orderService || typeof orderService.create !== 'function') {
+        throw new Error('Order service is not properly initialized');
+      }
+
+      const order = await orderService.create(orderData);
+      
+      if (!order) {
+        throw new Error('Failed to create order');
+      }
+      
+      // Clear cart after successful order creation
+      dispatch(clearCart());
+      clearCartItems();
+      
       toast.success('Order placed successfully!');
       navigate('/orders');
+      
       return order;
     } catch (error) {
+      console.error('Order submission error:', error);
+      
+      // Handle specific error types
+      if (error.message.includes('HC is not a constructor') || 
+          error.message.includes('not a constructor') ||
+          error.message.includes('Service initialization error')) {
+        toast.error('Service initialization error. Please refresh the page and try again.');
+        setServiceError(true);
+        return;
+      }
+      
+      if (error.message.includes('not properly initialized')) {
+        toast.error('Order service is unavailable. Please try again later.');
+        setServiceError(true);
+        return;
+      }
+      
       toast.error('Failed to create order: ' + error.message);
       throw error;
-}
+    }
   }
 
   async function handleSubmit(e, isRetry = false) {
@@ -522,8 +548,22 @@ const order = await orderService.create(orderData);
     } finally {
       setLoading(false);
     }
-  }
+}
 
+  // Early returns for loading and error states
+  if (loading) return <Loading />;
+  if (errors?.general) return <Error message={errors.general} />;
+  if (serviceError) {
+    return (
+      <div className="text-center py-12">
+        <Error message="Service is temporarily unavailable. Please refresh the page and try again." />
+        <Button onClick={() => window.location.reload()} className="mt-4">
+          Refresh Page
+        </Button>
+      </div>
+    );
+  }
+  
   // Redirect if cart is empty
   if (!cart || cart.length === 0) {
     return (
@@ -538,7 +578,6 @@ const order = await orderService.create(orderData);
       </div>
     );
   }
-
   return (
     <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4">
@@ -602,9 +641,9 @@ const order = await orderService.create(orderData);
                       <span>Rs. {gatewayFee.toLocaleString()}</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-lg font-semibold border-t pt-2">
+<div className="flex justify-between text-lg font-semibold border-t pt-2">
                     <span>Total:</span>
-                    <span className="gradient-text">Rs. {total.toLocaleString()}</span>
+                    <span className="gradient-text">Rs. {finalTotal.toLocaleString()}</span>
                   </div>
                   {dealSavings > 0 && (
                     <div className="text-center py-2 bg-green-50 rounded-lg">
@@ -900,9 +939,9 @@ value={formData.instructions}
                   disabled={loading}
 className="w-full"
                 >
-                  {loading ? 'Processing...' : `Place Order - Rs. ${total.toLocaleString()}`}
+                  {loading ? 'Processing...' : `Place Order - Rs. ${finalTotal.toLocaleString()}`}
                 </Button>
-</div>
+              </div>
             </form>
           </div>
         </div>

@@ -104,15 +104,16 @@ async getById(id) {
 async create(orderData) {
     await this.delay();
     
-    // Enhanced payment data validation
+    // Enhanced payment data validation with proper wallet payment handling
     if (orderData.paymentMethod && orderData.paymentMethod !== 'cash') {
-      if (!orderData.paymentResult && orderData.paymentMethod !== 'wallet') {
+      // Wallet payments are handled differently and don't require pre-existing paymentResult
+      if (orderData.paymentMethod !== 'wallet' && !orderData.paymentResult) {
         const error = new Error('Payment result is required for non-cash payments');
         error.code = 'PAYMENT_RESULT_MISSING';
         throw error;
       }
       
-      // Validate payment result structure for digital wallets
+      // Validate payment result structure for digital wallets (excluding wallet payments)
       if (['jazzcash', 'easypaisa'].includes(orderData.paymentMethod) && orderData.paymentResult) {
         if (!orderData.paymentResult.transactionId) {
           const error = new Error('Transaction ID is missing from payment result');
@@ -143,19 +144,30 @@ const newOrder = {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    if (orderData.paymentMethod === 'wallet') {
+if (orderData.paymentMethod === 'wallet') {
       try {
         if (!paymentService || typeof paymentService.processWalletPayment !== 'function') {
           throw new Error('Payment service not properly initialized');
         }
         const walletTransaction = await paymentService.processWalletPayment(orderData.total, newOrder.id);
-        newOrder.paymentResult = walletTransaction;
+        
+        // Ensure proper paymentResult structure for wallet payments
+        newOrder.paymentResult = {
+          transactionId: walletTransaction.transactionId,
+          amount: walletTransaction.amount,
+          paymentMethod: 'wallet',
+          status: 'completed',
+          timestamp: walletTransaction.timestamp,
+          reference: walletTransaction.reference
+        };
         newOrder.paymentStatus = 'completed';
       } catch (walletError) {
-        // Enhanced wallet error handling
+        // Enhanced wallet error handling with proper error classification
         const error = new Error('Wallet payment failed: ' + walletError.message);
         error.code = walletError.code || 'WALLET_PAYMENT_FAILED';
         error.originalError = walletError;
+        error.paymentMethod = 'wallet';
+        error.retryable = walletError.retryable || false;
         throw error;
       }
     }

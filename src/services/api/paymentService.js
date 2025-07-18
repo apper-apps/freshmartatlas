@@ -642,26 +642,38 @@ async processWalletPayment(amount, orderId) {
     await this.delay(500);
     
     if (amount <= 0) {
-      throw new Error('Payment amount must be positive');
+      const error = new Error('Payment amount must be positive');
+      error.code = 'INVALID_AMOUNT';
+      error.retryable = false;
+      throw error;
     }
 
     if (amount > this.walletBalance) {
-      throw new Error('Insufficient wallet balance');
+      const error = new Error('Insufficient wallet balance');
+      error.code = 'INSUFFICIENT_BALANCE';
+      error.retryable = false;
+      error.currentBalance = this.walletBalance;
+      error.requiredAmount = amount;
+      throw error;
     }
 
     this.walletBalance -= amount;
+    
+    const transactionId = this.generateTransactionId();
+    const reference = this.generateReference();
+    const timestamp = new Date().toISOString();
     
     const transaction = {
       Id: this.getWalletTransactionId(),
       type: 'order_payment',
       amount,
       balance: this.walletBalance,
-      timestamp: new Date().toISOString(),
+      timestamp,
       description: `Wallet payment for order ${orderId}`,
-      reference: this.generateReference(),
+      reference,
       requestId: null,
       orderId,
-      transactionId: this.generateTransactionId(),
+      transactionId,
       status: 'completed',
       metadata: {
         paymentMethod: 'wallet',
@@ -670,9 +682,15 @@ async processWalletPayment(amount, orderId) {
     };
 
     this.walletTransactions.push(transaction);
+    
+    // Return enhanced transaction data compatible with order service expectations
     return { 
       ...transaction,
-      transactionId: transaction.transactionId
+      transactionId: transactionId,
+      reference: reference,
+      timestamp: timestamp,
+      paymentMethod: 'wallet',
+      success: true
     };
   }
   async getWalletTransactions(limit = 50) {

@@ -189,10 +189,16 @@ const { productId, quantity } = action.payload;
       
       cartSlice.caseReducers.calculateTotals(state);
     },
-    clearCart: (state) => {
+clearCart: (state) => {
       state.items = [];
       state.total = 0;
       state.itemCount = 0;
+      state.dealsSummary = {
+        totalSavings: 0,
+        appliedDeals: []
+      };
+      state.error = null;
+      state.lastValidated = null;
     },
     
 calculateTotals: (state) => {

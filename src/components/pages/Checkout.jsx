@@ -5,6 +5,7 @@ import { CreditCard, Mail, MapPin, Phone, User } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import { toast } from "react-toastify";
 import ApperIcon from "@/components/ApperIcon";
+import Empty from "@/components/ui/Empty";
 import Error from "@/components/ui/Error";
 import Loading from "@/components/ui/Loading";
 import Account from "@/components/pages/Account";
@@ -14,7 +15,7 @@ import Button from "@/components/atoms/Button";
 import { productService } from "@/services/api/productService";
 import { orderService } from "@/services/api/orderService";
 import { paymentService } from "@/services/api/paymentService";
-import formatCurrency from "@/utils/currency";
+import { formatCurrency } from "@/utils/currency";
 import { clearCart } from "@/store/cartSlice";
 
 function Checkout() {
@@ -23,6 +24,7 @@ function Checkout() {
   const { items, total, clearCart: clearCartItems } = useCart();
   const [loading, setLoading] = useState(false);
   const [serviceError, setServiceError] = useState(false);
+  const [cartValidated, setCartValidated] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -39,9 +41,8 @@ function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [gatewayConfig, setGatewayConfig] = useState({});
   
-  // Use items from useCart hook as cart
+  // Use items from useCart hook as cart with validation
   const cart = items || [];
-
   // Calculate totals with validated pricing and deals
   const calculateCartTotals = () => {
     let subtotal = 0;
@@ -90,13 +91,52 @@ function Checkout() {
     return Math.max(feeAmount, selectedMethod.minimumFee || 0);
   }
 
-  const totals = calculateCartTotals();
+const totals = calculateCartTotals();
   const { originalSubtotal, dealSavings, subtotal, deliveryCharge, total: finalTotal } = totals;
   const gatewayFee = calculateGatewayFee(subtotal);
-
+  // Validate cart on component mount
   useEffect(() => {
-    loadPaymentMethods();
-  }, []);
+    const validateCart = async () => {
+      try {
+        // Check if cart exists and has items
+        if (!cart || cart.length === 0) {
+          console.warn('Checkout accessed with empty cart, redirecting to shopping');
+          toast.error('Your cart is empty. Please add items before checkout.');
+          navigate('/', { replace: true });
+          return;
+        }
+
+        // Validate cart items are properly structured
+        const invalidItems = cart.filter(item => 
+          !item.id || !item.name || !item.price || !item.quantity
+        );
+        
+        if (invalidItems.length > 0) {
+          console.warn('Invalid cart items detected:', invalidItems);
+          toast.error('Some cart items are invalid. Please refresh your cart.');
+          navigate('/cart', { replace: true });
+          return;
+        }
+
+        // Validate cart total
+        if (total <= 0) {
+          console.warn('Cart total is zero or negative:', total);
+          toast.error('Cart total is invalid. Please check your cart.');
+          navigate('/cart', { replace: true });
+          return;
+        }
+
+        setCartValidated(true);
+        loadPaymentMethods();
+      } catch (error) {
+        console.error('Cart validation error:', error);
+        toast.error('Error validating cart. Please try again.');
+        navigate('/cart', { replace: true });
+      }
+    };
+
+    validateCart();
+  }, [cart, total, navigate]);
 
   async function loadPaymentMethods() {
     try {
@@ -112,7 +152,7 @@ function Checkout() {
       }
     } catch (error) {
       console.error('Failed to load payment methods:', error);
-      toast.error('Failed to load payment options');
+toast.error('Failed to load payment options');
     }
   }
 
@@ -159,11 +199,10 @@ function Checkout() {
     }
   }
 
-  function removePaymentProof() {
+function removePaymentProof() {
     setPaymentProof(null);
-toast.info('Payment proof removed');
+    toast.info('Payment proof removed');
   }
-
   function validateForm() {
     const newErrors = {};
     const required = ['name', 'phone', 'address', 'city', 'postalCode'];
@@ -193,11 +232,9 @@ toast.info('Payment proof removed');
         newErrors.paymentProof = 'Payment proof is required';
       }
     }
-
-    setErrors(newErrors);
-return Object.keys(newErrors).length === 0;
+setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   }
-
   async function handlePaymentRetry() {
     try {
       setLoading(true);
@@ -232,11 +269,10 @@ return Object.keys(newErrors).length === 0;
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
+reader.onerror = reject;
       reader.readAsDataURL(file);
-});
+    });
   }
-
 async function completeOrder(paymentResult) {
     try {
       let paymentProofData = null;
@@ -466,11 +502,11 @@ async function completeOrder(paymentResult) {
       }
 
       // Complete the order
+// Complete the order
       await completeOrder(paymentResult);
       
-} catch (error) {
+    } catch (error) {
       console.error('Order submission error:', error);
-      
       // Track error for monitoring
       if (typeof window !== 'undefined' && window.performanceMonitor) {
         window.performanceMonitor.trackError(error, 'checkout-submission');
@@ -546,9 +582,9 @@ async function completeOrder(paymentResult) {
         }, retryDelay);
       }
     } finally {
-      setLoading(false);
+setLoading(false);
     }
-}
+  }
 
   // Early returns for loading and error states
   if (loading) return <Loading />;
@@ -564,15 +600,24 @@ async function completeOrder(paymentResult) {
     );
   }
   
-  // Redirect if cart is empty
+  // Show loading while validating cart
+  if (!cartValidated) {
+    return <Loading type="page" />;
+  }
+  
+  // Final validation - this should not happen after useEffect validation
   if (!cart || cart.length === 0) {
     return (
       <div className="min-h-screen bg-background py-8">
         <div className="container mx-auto px-4">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Your cart is empty</h1>
-            <p className="text-gray-600 mb-6">Add some products to your cart before checkout</p>
-            <Button onClick={() => navigate('/')}>Continue Shopping</Button>
+            <Empty 
+              type="cart" 
+              title="Your cart is empty"
+              description="Add some products to your cart before checkout"
+              action="Continue Shopping"
+              onAction={() => navigate('/')}
+            />
           </div>
         </div>
       </div>
@@ -608,9 +653,9 @@ async function completeOrder(paymentResult) {
                         <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
                       </div>
                     </div>
-                    <span className="font-semibold">
+<span className="font-semibold">
                       Rs. {(item.price * item.quantity).toLocaleString()}
-</span>
+                    </span>
                   </div>
                 ))}
                 <div className="border-t pt-4 space-y-2">
@@ -639,9 +684,9 @@ async function completeOrder(paymentResult) {
                     <div className="flex justify-between">
                       <span>Gateway Fee:</span>
                       <span>Rs. {gatewayFee.toLocaleString()}</span>
-                    </div>
+</div>
                   )}
-<div className="flex justify-between text-lg font-semibold border-t pt-2">
+                  <div className="flex justify-between text-lg font-semibold border-t pt-2">
                     <span>Total:</span>
                     <span className="gradient-text">Rs. {finalTotal.toLocaleString()}</span>
                   </div>
@@ -725,9 +770,9 @@ async function completeOrder(paymentResult) {
                   </div>
                   <div>
                     <Input
-                      label="Delivery Instructions"
+label="Delivery Instructions"
                       name="instructions"
-value={formData.instructions}
+                      value={formData.instructions}
                       onChange={handleInputChange}
                       placeholder="Special instructions for delivery..."
                     />
@@ -817,9 +862,9 @@ value={formData.instructions}
                                         <ApperIcon name="Copy" size={14} />
                                       </button>
                                     </div>
-                                  </div>
+</div>
                                   {method.instructions && (
-<div className="pt-2 border-t border-blue-200">
+                                    <div className="pt-2 border-t border-blue-200">
                                       <p className="text-xs text-blue-700">{method.instructions}</p>
                                     </div>
                                   )}
@@ -923,10 +968,10 @@ value={formData.instructions}
                             <li>• Copy the transaction ID and enter it in the field above</li>
                             <li>• Take a clear screenshot of the payment confirmation</li>
                             <li>• Upload the screenshot for verification</li>
-                            <li>• Your order will be processed after payment verification</li>
+<li>• Your order will be processed after payment verification</li>
                           </ul>
-</div>
-</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -935,9 +980,9 @@ value={formData.instructions}
               {/* Submit Button */}
               <div className="card p-6">
                 <Button
-                  type="submit"
+type="submit"
                   disabled={loading}
-className="w-full"
+                  className="w-full"
                 >
                   {loading ? 'Processing...' : `Place Order - Rs. ${finalTotal.toLocaleString()}`}
                 </Button>
@@ -945,9 +990,8 @@ className="w-full"
             </form>
           </div>
         </div>
-      </div>
+</div>
     </div>
-    );
+  );
 }
-
 export default Checkout;

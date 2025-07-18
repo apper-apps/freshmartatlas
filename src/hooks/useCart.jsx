@@ -64,8 +64,11 @@ export const useCart = () => {
     return 0;
   };
 
-  return {
+return {
     cart,
+    items: cart, // Alias for compatibility
+    total: cartTotal,
+    count: cartCount,
     addToCart,
     removeFromCart,
     updateQuantity,

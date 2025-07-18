@@ -125,22 +125,59 @@ async processDigitalWalletPayment(walletType, amount, orderId, phone) {
       };
       
       const displayName = walletDisplayNames[walletType] || walletType;
-      const errorReasons = [
-        'Insufficient balance in your wallet',
-        'Network connectivity issue',
-        'Wallet service temporarily unavailable',
-        'Transaction limit exceeded',
-        'Authentication failed'
+      
+      // Define specific error scenarios with targeted messages
+      const errorScenarios = [
+        {
+          type: 'INSUFFICIENT_BALANCE',
+          message: `Insufficient balance in your ${displayName} wallet`,
+          userGuidance: `Please add funds to your ${displayName} wallet and try again. You can top up through the ${displayName} app or authorized retailers.`,
+          retryable: true
+        },
+        {
+          type: 'AUTHENTICATION_FAILED',
+          message: `${displayName} authentication failed`,
+          userGuidance: `Please check your ${displayName} PIN/password and ensure you're using the correct registered phone number. If you've forgotten your PIN, please reset it through the ${displayName} app.`,
+          retryable: true
+        },
+        {
+          type: 'NETWORK_ERROR',
+          message: `Network connectivity issue with ${displayName}`,
+          userGuidance: `Please check your internet connection and try again. If the issue persists, ${displayName} services may be temporarily unavailable.`,
+          retryable: true
+        },
+        {
+          type: 'TRANSACTION_LIMIT',
+          message: `Transaction limit exceeded for ${displayName}`,
+          userGuidance: `You've reached your ${displayName} transaction limit. Please try a smaller amount or contact ${displayName} support to increase your limit.`,
+          retryable: false
+        },
+        {
+          type: 'SERVICE_UNAVAILABLE',
+          message: `${displayName} service temporarily unavailable`,
+          userGuidance: `${displayName} services are currently under maintenance. Please try again later or use an alternative payment method.`,
+          retryable: true
+        }
       ];
       
-      const randomReason = errorReasons[Math.floor(Math.random() * errorReasons.length)];
+      const randomScenario = errorScenarios[Math.floor(Math.random() * errorScenarios.length)];
       
-      const error = new Error(`${displayName} payment failed: ${randomReason}. Please check your wallet balance and try again.`);
+      const error = new Error(randomScenario.message);
       error.code = 'WALLET_PAYMENT_FAILED';
       error.walletType = walletType;
-      error.reason = randomReason;
-      error.retryable = true;
-      error.userGuidance = `Please ensure you have sufficient balance in your ${displayName} wallet and try again. If the problem persists, contact ${displayName} support.`;
+      error.walletDisplayName = displayName;
+      error.errorType = randomScenario.type;
+      error.retryable = randomScenario.retryable;
+      error.userGuidance = randomScenario.userGuidance;
+      
+      // Add specific guidance based on error type
+      if (randomScenario.type === 'AUTHENTICATION_FAILED') {
+        error.authenticationHelp = `Common solutions:
+• Verify your ${displayName} PIN/password
+• Ensure you're using the registered phone number
+• Check if your ${displayName} account is active
+• Reset your PIN if needed through the ${displayName} app`;
+      }
       
       throw error;
     }

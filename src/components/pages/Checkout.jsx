@@ -514,7 +514,7 @@ const orderData = {
 // Complete the order
       await completeOrder(paymentResult);
       
-    } catch (error) {
+} catch (error) {
       console.error('Order submission error:', error);
       // Track error for monitoring
       if (typeof window !== 'undefined' && window.performanceMonitor) {
@@ -527,12 +527,28 @@ const orderData = {
       let retryDelay = 2000;
       let errorType = 'general';
       
-      // Comprehensive error classification
+      // Comprehensive error classification with enhanced wallet handling
       if (error.code === 'WALLET_PAYMENT_FAILED') {
         errorMessage = error.userGuidance || error.message;
         showRetry = error.retryable !== false;
         retryDelay = 3000;
         errorType = 'wallet';
+        
+        // Special handling for authentication failures
+        if (error.errorType === 'AUTHENTICATION_FAILED') {
+          errorType = 'wallet-auth';
+          errorMessage = `${error.walletDisplayName || 'Wallet'} authentication failed. Please verify your PIN/password and try again.`;
+          showRetry = true;
+          retryDelay = 2000;
+        } else if (error.errorType === 'INSUFFICIENT_BALANCE') {
+          errorType = 'wallet-balance';
+          errorMessage = `Insufficient balance in your ${error.walletDisplayName || 'wallet'}. Please add funds and try again.`;
+          showRetry = false; // Don't auto-retry for balance issues
+        } else if (error.errorType === 'TRANSACTION_LIMIT') {
+          errorType = 'wallet-limit';
+          errorMessage = `Transaction limit exceeded for ${error.walletDisplayName || 'wallet'}. Please try a smaller amount.`;
+          showRetry = false; // Don't auto-retry for limit issues
+        }
       } else if (error.message.includes('payment')) {
         showRetry = !isRetry;
         errorMessage = `Payment processing failed. ${error.message}`;
@@ -556,7 +572,7 @@ const orderData = {
       }
       
       toast.error(errorMessage, {
-        duration: errorType === 'network' ? 6000 : 4000,
+        duration: errorType.startsWith('wallet') ? 6000 : (errorType === 'network' ? 6000 : 4000),
         action: showRetry && !isRetry ? {
           label: 'Retry',
           onClick: () => handleSubmit(e, true)
@@ -570,7 +586,10 @@ const orderData = {
           
           switch (errorType) {
             case 'wallet':
-              retryMessage = `${error.walletType || 'Wallet'} payment failed. Would you like to try again or choose a different payment method?`;
+              retryMessage = `${error.walletDisplayName || 'Wallet'} payment failed. Would you like to try again or choose a different payment method?`;
+              break;
+            case 'wallet-auth':
+              retryMessage = `${error.walletDisplayName || 'Wallet'} authentication failed. Please verify your credentials and try again, or select a different payment method.`;
               break;
             case 'network':
               retryMessage = 'Network issue detected. Would you like to retry the order?';
@@ -584,6 +603,11 @@ const orderData = {
             default:
               retryMessage = 'Order failed. Would you like to retry?';
           }
+          
+          // For wallet authentication failures, provide additional guidance
+          if (errorType === 'wallet-auth' && error.authenticationHelp) {
+            retryMessage += `\n\nTips:\n${error.authenticationHelp}`;
+          }
             
           if (window.confirm(retryMessage)) {
             handleSubmit(e, true);
@@ -591,7 +615,7 @@ const orderData = {
         }, retryDelay);
       }
     } finally {
-setLoading(false);
+      setLoading(false);
     }
   }
 
